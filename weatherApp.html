@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Meta information for character encoding and responsive design -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Wizard</title>
+
+    <!-- Link to the favicon -->
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='wApp.ico') }}"
+      type="image/x-icon"
+    />
+
+    <style>
+      /* General body styling */
+      body {
+        font-family: "Poppins", Arial, sans-serif; /* Modern font for readability */
+        background: linear-gradient(
+          to bottom,
+          #87ceeb,
+          #4682b4
+        ); /* Sky blue gradient background */
+        background-attachment: fixed; /* Fix the gradient to prevent looping */
+        background-size: cover; /* Ensure the gradient covers the entire viewport */
+        color: #333; /* Dark gray text for readability */
+        text-align: center; /* Center-align text */
+        margin: 0;
+        padding: 0;
+        min-height: 100vh; /* Ensure the body stretches to fill the viewport height */
+        display: flex; /* Use flexbox for centering */
+        justify-content: center; /* Center horizontally */
+        align-items: center; /* Center vertically */
+      }
+
+      /* Main container styling */
+      .container {
+        max-width: 700px; /* Set the maximum width of the container */
+        margin: 50px auto; /* Center the container with margin */
+        padding: 40px; /* Add padding inside the container */
+        background: white; /* White background for the container */
+        border-radius: 15px; /* Rounded corners */
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+        animation: fadeIn 1s ease-in-out; /* Fade-in animation */
+      }
+
+      /* Fade-in animation */
+      @keyframes fadeIn {
+        from {
+          opacity: 0; /* Start fully transparent */
+          transform: translateY(-20px); /* Start slightly above */
+        }
+        to {
+          opacity: 1; /* Fully visible */
+          transform: translateY(0); /* Move to original position */
+        }
+      }
+
+      /* Title styling */
+      h1 {
+        font-family: "Cursive", "Fantasy", serif; /* Fantasy-style font for the title */
+        font-size: 3rem; /* Larger font size for the title */
+        margin-bottom: 20px; /* Add spacing below the title */
+        color: #2c3e50; /* Darker blue for the title */
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow for the title */
+      }
+
+      /* Styling for the larger "W" in the title */
+      .large-letter {
+        font-size: 6rem; /* Make the "W" larger */
+        color: #4caf50; /* Green color for emphasis */
+        display: inline-block; /* Ensure proper alignment with the rest of the text */
+        vertical-align: middle; /* Align the larger "W" with the baseline of the text */
+      }
+
+      /* Form styling */
+      form {
+        margin-bottom: 20px; /* Add spacing below the form */
+      }
+
+      /* Input field styling */
+      input[type="text"] {
+        padding: 12px; /* Add padding inside the input field */
+        width: 70%; /* Set the width of the input field */
+        border: 1px solid #ccc; /* Light gray border */
+        border-radius: 8px; /* Rounded corners */
+        font-size: 1rem; /* Set font size */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+        outline: none; /* Remove default outline */
+      }
+
+      /* Button styling */
+      button {
+        padding: 12px 25px; /* Add padding inside the button */
+        background-color: #4caf50; /* Green background for buttons */
+        color: white; /* White text color */
+        border: none; /* Remove border */
+        border-radius: 8px; /* Rounded corners */
+        font-size: 1rem; /* Set font size */
+        cursor: pointer; /* Change cursor to pointer on hover */
+        transition: all 0.3s ease; /* Smooth transition for hover effects */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+      }
+
+      /* Button hover effect */
+      button:hover {
+        background-color: #45a049; /* Darker green for hover */
+        transform: scale(1.05); /* Slightly enlarge the button */
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2); /* Add a deeper shadow */
+      }
+
+      /* Weather data styling */
+      .weather-info {
+        margin-top: 20px; /* Add spacing above the weather info */
+        font-size: 1.2rem; /* Set font size */
+        line-height: 1.8; /* Increase line height for readability */
+        background: rgba(240, 240, 240, 0.8); /* Light gray background */
+        padding: 15px; /* Add padding inside the weather info box */
+        border-radius: 10px; /* Rounded corners */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+      }
+
+      /* Error message styling */
+      .error {
+        color: #e74c3c; /* Red color for error messages */
+        font-weight: bold; /* Bold text */
+        margin-top: 20px; /* Add spacing above the error message */
+        background: rgba(231, 76, 60, 0.2); /* Light red background */
+        padding: 10px; /* Add padding inside the error box */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Title with larger "W" -->
+      <h1>
+        <span class="large-letter">W</span>eather
+        <span class="large-letter">W</span>izard
+      </h1>
+
+      <!-- Form for entering a location and a button for using the user's current location -->
+      <form method="POST" id="location-form">
+        <!-- Input field for entering a city name -->
+        <input
+          type="text"
+          name="location"
+          id="location-input"
+          placeholder="Enter a city (e.g., London)"
+          required
+        />
+        <!-- Button to fetch weather for the entered location -->
+        <button type="submit">Get Weather</button>
+        <!-- Button to fetch weather for the user's current location -->
+        <button type="button" id="current-location-btn">
+          Use Current Location
+        </button>
+      </form>
+
+      <!-- Display weather data if available -->
+      {% if weather_data %}
+      <div class="weather-info">
+        <p>
+          <strong>Location:</strong> {{ weather_data.name }}, {{
+          weather_data.sys.country }}
+        </p>
+        <p>
+          <strong>Temperature:</strong> {{ weather_data.main.temp }}°C / {{
+          weather_data.main.temp_f }}°F
+        </p>
+        <p>
+          <strong>Weather:</strong> {{ weather_data.weather[0].description |
+          capitalize }}
+        </p>
+        <p><strong>Humidity:</strong> {{ weather_data.main.humidity }}%</p>
+        <p><strong>Wind Speed:</strong> {{ weather_data.wind.speed }} m/s</p>
+      </div>
+      {% endif %}
+
+      <!-- Display error message if available -->
+      {% if error %}
+      <div class="error">{{ error }}</div>
+      {% endif %}
+    </div>
+    <script>
+      // Handle the "Use Current Location" button click
+      document
+        .getElementById("current-location-btn")
+        .addEventListener("click", () => {
+          // Send a POST request to the /current-location route
+          fetch("/current-location", { method: "POST" })
+            .then((response) => response.json()) // Parse the JSON response
+            .then((data) => {
+              if (data.error) {
+                // Show an error if the location couldn't be fetched
+                alert(data.error);
+              } else {
+                // Automatically populate the location input and submit the form
+                document.getElementById("location-input").value = data.location;
+                document.getElementById("location-form").submit();
+              }
+            })
+            .catch((error) => {
+              // Handle any errors during the fetch request
+              console.error("Error fetching current location:", error);
+              alert("Could not fetch your current location. Please try again.");
+            });
+        });
+    </script>
+  </body>
+</html>
